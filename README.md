@@ -267,7 +267,7 @@ Birds of Prey at 6:40pm on 14 Feb at screen 5 of Slaughter Lane is a session. A 
 an associated seating layout, tickets sold, seats sold, etc. A session is identified by a multi-digit session ID
 ("149260"). A session ID is only unique to a cinema. The composite key of cinema ID ("0006") and session ID ("149260"")
 is unique across the system. Almost all sessions are reserved seating. This is noted in the market feed with
-`reservedSeating: "1""`. Non-reserved seating or General Admission (GA) sessions won't have seating data available
+`reservedSeating: "1"`. Non-reserved seating or General Admission (GA) sessions won't have seating data available
 so you can ignore any sessions that aren't reserved seating.
 * **Seating Data** - The seating data associated with a session. The seating data is composed of seating areas
 which are composed of a rectangular, two-dimensional grid of rows and columns.
@@ -278,8 +278,8 @@ that has a seating area for the floor and a second seating area for the balcony.
 A (row, column) coordinate contains a `Space`.
 * **Space** - A coordinate in the seating grid identified by (row, column). A space may be blank/empty
 (aisle or dead space) or it may contain a seat and/or table. Spaces have a `seatStatus` that describes 
-whether the seat is sold or not. EMPTY should be counted as an unsold seat. SOLD and RESERVED should be counted as
-a "sold" seat. Other values (NONE, BROKEN, PLACEHOLDER, and UNKNOWN) should not factor into the fill rate calculation.
+whether the seat is sold or not. `EMPTY` should be counted as an unsold seat. `SOLD` and `RESERVED` should be counted as
+a "sold" seat. Other values (`NONE`, `BROKEN`, `PLACEHOLDER`, and `UNKNOWN`) should not factor into the fill rate calculation.
 * **Business Day** - A business day at the Alamo runs from 6:00am to 6:00am so a show at 12:30am the early 
 morning of 3 March is part of the business day identified by previous calendar day 2 March. We usually think about
 time in terms of the time at the cinema (cinema local time or CLT). Our middleware APIs identify times as UTC or CLT
@@ -302,7 +302,7 @@ A monster of an endpoint that contains all of the sessions in a market that are 
 (identifiable by ID or slug) along with summary information about the films and cinemas. The structure is
 inconvenient. This data refreshes every 10 minutes and sessions (and films) will come and go as they are
 passed by or scheduled.
-[See it in action](https://feeds.drafthouse.com/adcService/showtimes.svc/marketFilms/austin).
+[See it in action](https://feeds.drafthouse.com/adcService/showtimes.svc/marketFilms/austin) (for Austin).
 * **Seating Data** - `GET /s/mother/v1/page/seats/preview/{cinemaId}/{sessionId}` - The seating data for the
 specified session. Space `seatStatus` of `SOLD` or `RESERVED` are considered "sold". Space `seatStatus` of `EMPTY` is "not sold".
 Other seatStatus values should be ignored/not counted. This data is cached for a minute or two but changes
@@ -319,6 +319,7 @@ This data is live/no cache.
 images, trailers, and the title displayed on the website (often slightly different than the title available
 from the ticketing system via the market feed). The show feed also contains an (optional) `series` property that
 identifies which series the film is part of (if any). You'll need this for the extra credit.
+[See it in action](http://drafthouse.com/api/v1/shows/weird-wednesday-nowhere) (for Weird Wednesday Nowhere)
 
 ## Code Tour and Tips
 
