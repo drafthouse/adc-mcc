@@ -275,7 +275,8 @@ which are composed of a rectangular, two-dimensional grid of rows and columns.
 Most sessions have a single seating area. Screen #1 at Ritz (0002), Austin (0000) is a (rare) case
 that has a seating area for the floor and a second seating area for the balcony. 
 * **Row** - A row in the seating data. All rows in a seating area have the same number of columns (it's a grid).
-A (row, column) coordinate contains a `Space`.
+A (row, column) coordinate contains a `Space`. The spaces/seats in a row are found in a property called `seats`
+(even though not all coordinates are actually seats).
 * **Space** - A coordinate in the seating grid identified by (row, column). A space may be blank/empty
 (aisle or dead space) or it may contain a seat and/or table. Spaces have a `seatStatus` that describes 
 whether the seat is sold or not. `EMPTY` should be counted as an unsold seat. `SOLD` and `RESERVED` should be counted as
