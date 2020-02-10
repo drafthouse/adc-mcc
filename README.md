@@ -194,7 +194,7 @@ modify any of the included classes.
 Step 1: Make it work correctly. Step 2: Make it readable/maintainable. Step 3: Make it perform. Step 4: Extra credit.
 Step 5: Profit.
 
-###Functional requirements
+### Functional requirements
 
 * We want to be able to filter the sessions considered by
     * Location - cinema, market, or national
@@ -229,7 +229,7 @@ film slugs that are showing (included in the fill rates). We want to know
 with a subsequent query. Slugs tend to be a nice middle ground, identifying but human readable. We usually
 try to make our APIs accept both IDs and slugs.
     
-###Non-functional Requirements/Considerations
+### Non-functional Requirements/Considerations
 
 * Maintainability and performance are our primary concerns beyond the functional.
 * Try not to win the obfuscated Scala code competition. Be concise but not too concise. If you are doing something
