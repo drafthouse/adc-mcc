@@ -4,16 +4,16 @@ Alamo Drafthouse takes great care in how we select members of our engineering te
 us get an idea of how you would use software to solve problems for our end users -- some of the most avid movie lovers 
 in the known universe. 
 
-We are using this assessment to evaluate a number of skills which are critical for our back-end development team. Most 
-notably, this challenge will help us assess your ability to simultaneously absorb a (partially) new or unfamiliar 
+We are using this assessment to evaluate a number of skills which are critical for our back-end development team. This
+challenge will help us assess your ability to simultaneously absorb a (partially) new or unfamiliar 
 technology and some loose requirements in order to build a service that is useful, handles the edge cases, and performs 
 well in spite of the messy, not entirely consistent, and inconvenient data available behind the scenes. 
 
 We're looking for some insight into your ability to implement a feature in a clean, production-quality, and maintainable
 manner and we plan to discuss your solution with you in our follow-on technical interviews (so make some notes).
 
-We know that your time is important, so we’ve designed the challenge to take less than 5 hours depending on how 
-familiar you are with Scala development but spend as much time as you need to produce something you are proud
+We know that your time is important, so we’ve designed the challenge to take less than 5 hours (depending on how 
+familiar you are with Scala development) but spend as much time as you need to produce something you are proud
 of and that reflects your real-world work product. This can be a simple project but it can go pretty deep if
 you want it to (advanced caching, error handling/reporting, metrics, tracing, etc).
 We hope you have some fun while you build it!
@@ -23,12 +23,12 @@ We hope you have some fun while you build it!
 For this coding assessment we are asking you to put together an API (one or more endpoints) to help us understand the
 percentage of seats that we've sold. We call this the "fill rate" and it's an important metric as it helps
 us schedule the correct amount of labor at the venues and helps us determine if our film programming/scheduling is
-optimal or needs to be tweaked. 
+optimal or needs to be tweaked.
 
 This example is a bit contrived as we wouldn't really use our transactional middleware to report on a metric 
-like this but it's a good example of how we often have to combine data in interesting ways. Our middleware platform
-regularly has to bend over backward to work around oddities with the systems with which we integrate and this challenge 
-is a little window into that world.
+like this but it's a good example of how we often have to combine data in interesting and inconvenient ways.
+Our middleware platform regularly has to bend over backward to work around oddities with the systems with which
+we integrate and this challenge is a little window into that world.
 
 ## Submission Mechanics
 
@@ -40,8 +40,8 @@ notes might help jog your memory as we're talking through your solution.
 
 Please do **NOT** fork this to a public repository or submit pull requests to this repository as
 that will make your code submission easily visible to other candidates. Simply pushing to a new (public) remote is
-fine. The best approach is to create a branch for your work and to push those changes (and the develop and master
-branches) up to a new repository you create. Some example steps to do this:
+fine. The best approach is to create a branch for your work and to push those changes (and parent branch)
+up to a new repository you create. Some example steps to do this:
 
 ```
 $ git clone git@github.com:drafthouse/adc-mcc.git
@@ -90,8 +90,8 @@ an executable uberjar in `target/scala-2.12/adc-mcc-exec.jar`. You can run that 
 `java -jar target/scala-2.12/adc-mcc-exec.jar`. The server runs HTTP on [port 9999](http://localhost:9999).
 
 For development it's easiest to run the server in SBT using [sbt-revolver](https://github.com/spray/sbt-revolver) which 
-is already configured in the project. A simple `sbt ~reStart` will run the server in a watch loop. Whenever code is 
-updated, the code will be incrementally compiled and the server automatically restarted. The code/build/run loop is 
+is already configured in the project. `sbt ~reStart` will run the server in a watch loop. Whenever the source is 
+updated, the project will be incrementally compiled and the server automatically restarted. The code/build/run loop is 
 pretty fast and yields a decent development experience that works with any editor.
 
 You should see something like this:
@@ -184,7 +184,8 @@ calls will fail.
 
 It's time to start calculating the fill rate, sliced in various different ways. We want to be able to look at various
 different time periods (today, this week, arbitrary range), filter by location (market, cinema, or national), 
-films, or series (extra credit), and see the fill rate broken down by business day of week and day part.
+filter by films, or filter by series (extra credit), and see the fill rate broken down by business day of week
+(Monday, Tuesday, etc) and day part (matinee, prime, late, etc).
 
 The API you build to do this is up to you. We've provided a stubbed out starting point in
 `com.drafthouse.mcc.controller.FillRateController` but how you structure the endpoint(s) is up to you. Feel free to
@@ -193,7 +194,7 @@ modify any of the included classes.
 Step 1: Make it work correctly. Step 2: Make it readable/maintainable. Step 3: Make it perform. Step 4: Extra credit.
 Step 5: Profit.
 
-Functional requirements:
+###Functional requirements
 
 * We want to be able to filter the sessions considered by
     * Location - cinema, market, or national
@@ -210,27 +211,33 @@ Functional requirements:
     expensive to calculate (given the endpoints we're providing) so it will be some extra work to make that
     perform well.
 * We want to know what we're looking at in the results. Include the identifying information for the entities
-included in the calculation. We know what we asked for (filtered by) but we want to know what we found. So,
-for example, if we ask for fill rate tomorrow in Austin, include the cinema ID/slugs of the cinemas included in
-the results (if a cinema isn't showing anything during that period, don't include it's ID/slug). Include the
-film slugs that are showing (included in the fill rates).
+included in the calculation. Presumably we know what we asked for (filtered by) but we want to know what we found. So,
+for example, if we ask for fill rate tomorrow at South Lamar, include the cinema ID/slugs of South Lamar (assuming
+there were sessions scheduled during the requested timeframe) and include only the
+film slugs that are showing (included in the fill rates). We want to know
+    * Which locations are included? Include market identifiers and cinema identifiers/slugs
+    * Which films are included? Include film identifiers/slugs
+    * Which series are included (extra credit)? Include series identifiers/slugs
 * We want to see the fill rates broken down by
-    * Overall - Overall and overall by day part.
+    * Overall - Overall and overall by day part. Only include day parts in the time range.
     * Business Day of Week - Use the enum values from `java.time.DayOfWeek`. Only include the
-    business days of week included in the result. Include overall and and by day part.
-    * Day Part - overall and as part of business day of week.
+    business days of week included in the result. Include overall and and by day part (only include day parts in the
+    time range).
+    * Day Part - overall and as part of business day of week (only include the ranges that are relevant for the
+    selected sessions).
 * Should your API report IDs, slugs, or names? IDs are hard to grok. Names aren't precise if you want to follow up
 with a subsequent query. Slugs tend to be a nice middle ground, identifying but human readable. We usually
 try to make our APIs accept both IDs and slugs.
     
-Non-functional Requirements/Considerations:
+###Non-functional Requirements/Considerations
 
 * Maintainability and performance are our primary concerns beyond the functional.
 * Try not to win the obfuscated Scala code competition. Be concise but not too concise. If you are doing something
 non-obvious (unexpected use of implicits comes to mind) or some other kind of Scala/Cats/shapeless magic, make
 a note of it in your code so someone can unwind what's going on six months from now. We're simpletons.
 * Initial loads are going to be slow. The market feeds in particular are large and you need to ingest at least
-one of them. National, where you need all of the market feeds, will be a pig. Think about how you might improve
+one of them and the seating data for any relevant sessions. National, where you need all of the market feeds (and their
+associated seating data), will be a pig. Think about how you might improve
 performance for subsequent queries. Consider data freshness for the various feeds (some change infrequently, some
 more frequently). How might you improve cold-start performance? How much data are we talking about? Can we cache
 everything? What are the memory requirements for your solution? How would your solution differ (or would it) for
@@ -384,9 +391,9 @@ Annotate any serialized class properties with `ApiParam` as these show up in the
 
 # Questions/Blocked?
 
-Shoot us an email or give us a call. We don't want you stuck and frustrated on something stupid.
+Blocked on something? Shoot us an email or give us a call. We don't want you stuck and frustrated on something stupid.
 
-Have some feedback on the assignment, let us know.
+Have some feedback on the assignment? Let us know.
 
  
 Good Luck,
