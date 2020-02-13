@@ -183,7 +183,7 @@ calls will fail.
 ## The Assignment: Fill Rate API
 
 It's time to start calculating the fill rate, sliced in various different ways. We want to be able to look at various
-different time periods (today, this week, arbitrary range), filter by location (market, cinema, or national), 
+different time periods (today, this week, arbitrary range), filter by location (market, cinema, **and national**), 
 filter by films, or filter by series (extra credit), and see the fill rate broken down by business day of week
 (Monday, Tuesday, etc) and day part (matinee, prime, late, etc).
 
@@ -197,15 +197,15 @@ Step 5: Profit.
 ### Functional requirements
 
 * We want to be able to filter the sessions considered by
-    * Location - cinema, market, or national
-    * Film - Multiple would be useful (maybe comma-delimited). In this data set there will be multiple "Films" for the
+    * Location - cinema, market, **and national**
+    * Film - Multiple would be useful (maybe comma-delimited or an array if you POST). In this data set there will be multiple "Films" for the
     same logical title (2d-star-wars and 3d-star-wars, for example). We might want to know fill rate for the logical
     title (which would require multiple Film identifiers. For example, the fll rate for Star Wars on opening weekend
     would need to consider a number of variants of Star Wars).
     * Time frame - Most commonly we'll want to look at today and this week but we might want to look at next
     week or some arbitrary period. Keep in mind that we will be thinking in terms of cinema local time (CLT) so
     you'll want to use that concept. This week in Brooklyn means a different universal time range than this week in
-    San Francisco.
+    San Francisco. How does that impact your API design if you want to support the national concept?
     * Series - **Extra credit**. Slice the data by series so we can see what the fill rate for Weird Wednesday
     shows is like. Which film is in which series and therefore which sessions are in play is going to be
     expensive to calculate (given the endpoints we're providing) so it will be some extra work to make that
@@ -228,7 +228,7 @@ film slugs that are showing (included in the fill rates). We want to know
 * Should your API report IDs, slugs, or names? IDs are hard to grok. Names aren't precise if you want to follow up
 with a subsequent query. Slugs tend to be a nice middle ground, identifying but human readable. We usually
 try to make our APIs accept both IDs and slugs.
-    
+
 ### Non-functional Requirements/Considerations
 
 * Maintainability and performance are our primary concerns beyond the functional.
@@ -238,13 +238,13 @@ a note of it in your code so someone can unwind what's going on six months from 
 * Initial loads are going to be slow. The market feeds in particular are large and you need to ingest at least
 one of them and the seating data for any relevant sessions. National, where you need all of the market feeds (and their
 associated seating data), will be a pig. Think about how you might improve
-performance for subsequent queries. Consider data freshness for the various feeds (some change infrequently, some
+performance for subsequent queries (caching). Consider data freshness for the various feeds (some change infrequently, some
 more frequently). How might you improve cold-start performance? How much data are we talking about? Can we cache
 everything? What are the memory requirements for your solution? How would your solution differ (or would it) for
 a single server versus a cluster or pool of servers. There's a balance between speedy and stale and slow and correct
 and we want to see how you solve for that balance. Can you give control of that balance point to your users?
-* How should you handle "minor" errors? You'll be aggregating lots of data. What if one call fails (can't load the seating
-data for one session, for example). When is it OK to eat the data vs. erroring vs. caveating the result?
+* How should you handle "minor" errors? You'll be aggregating data from lots of endpoints. What if some of the calls fail (can't load the seating
+data for a few sessions, for example). When is it OK to eat the data vs. erroring vs. caveating the result?
 
 Put on your user hat and design what is useable and flexible.
 
@@ -375,19 +375,25 @@ that uses Scala Futures but barring that, you'll just be working with Twitter Fu
 [Read about Twitter Futures](https://twitter.github.io/finagle/guide/Futures.html).
 Note that any blocking calls (likely from external libraries) should be wrapped in a `FuturePool` to keep the
 code base non-blocking. `for` comprehensions yielding Futures is the common code pattern.
-If you aren't consuming and producing Futures in your services and controllers, you're doing something wrong.
+If you aren't consuming and producing Futures in your services and controllers, you're probably doing something wrong.
 Everything (except simple helper methods) should be asynchronous.
-* **Options** - The Option type class is probably the second most widely used type class after Future so
+* **Options** - The Option type class is probably the second most widely used type class in our codebases after Future so
 Option[Future[A]] and Future[Option[A]] maybe need combining in a number of places.
 Enjoy a good Future[Option[Future[A]]] and remember that we want to be able to understand the code.
+We'll be very sad if we encounter a NullPointerException (egad) or 
 * **Errors** - Use `Future.exception` and Exceptions from `AdcError`. Define your own `ErrorCode`s as needed.
-* **Payloads** - Success payloads should contain a `data` property with whatever structure is relevant under `data`.
+* **Payloads** - Success payloads should contain a `data` property with whatever structure is relevant for the
+endpoint under `data`.
 Error payloads (mostly already handled by `AdcExceptionMapper`) should contain an `error` property with
 a nested `errorCode` property identifying an error category and code.
 * **API documentation** - Document your APIs. Controllers should provide their endpoints via ***method***WithDoc methods
 which should include parameters (`PathParameter` and `QueryParameter`) and descriptions. Follow the sample controllers.
 Annotate any serialized class properties with `ApiParam` as these show up in the "model" in Swagger.
-* **Circe** - Use Circe auto serialization if you can to save yourself some effort.
+* **Circe** - Use Circe auto serialization if you can to save yourself some effort. Finatra has built-in support
+for JSON serialization using Jackson but we don't use those facilities and we recommend that you just stick with Circe.
+* **Purity** - If you want to implement your internal code/services using something like Cats Effect that's
+fine/interesting/nifty but you'll need to fit that into our Future world which seems like a lot
+of extra effort for this project. But, it would be interesting if your head is in that space.
 
 # Questions/Blocked?
 
