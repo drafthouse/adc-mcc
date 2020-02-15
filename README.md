@@ -377,23 +377,29 @@ Note that any blocking calls (likely from external libraries) should be wrapped 
 code base non-blocking. `for` comprehensions yielding Futures is the common code pattern.
 If you aren't consuming and producing Futures in your services and controllers, you're probably doing something wrong.
 Everything (except simple helper methods) should be asynchronous.
-* **Options** - The Option type class is probably the second most widely used type class in our codebases after Future so
-Option[Future[A]] and Future[Option[A]] maybe need combining in a number of places.
-Enjoy a good Future[Option[Future[A]]] and remember that we want to be able to understand the code.
-We'll be very sad if we encounter a NullPointerException (egad) or 
+* **Options** - The Option type is probably the second most widely used monadic type in our codebases after Future. It's commmon for it to be combined with Futures so Option[Future[A]], 
+Future[Option[A]], and Future[Option[Future[A]]] are all constructs that you may come across
+and need to work with in a readable manner.
+We assume you aren't a stranger to Option and we'll be very sad if we encounter a
+NullPointerException (egad!) or an unsafe Option.get in your solution.
 * **Errors** - Use `Future.exception` and Exceptions from `AdcError`. Define your own `ErrorCode`s as needed.
 * **Payloads** - Success payloads should contain a `data` property with whatever structure is relevant for the
 endpoint under `data`.
 Error payloads (mostly already handled by `AdcExceptionMapper`) should contain an `error` property with
-a nested `errorCode` property identifying an error category and code.
+a nested `errorCode` property identifying an error category and code. It's sometimes appropriate
+to have a payload with `data` and `error` properties to represent some type of partial failure.
 * **API documentation** - Document your APIs. Controllers should provide their endpoints via ***method***WithDoc methods
 which should include parameters (`PathParameter` and `QueryParameter`) and descriptions. Follow the sample controllers.
 Annotate any serialized class properties with `ApiParam` as these show up in the "model" in Swagger.
 * **Circe** - Use Circe auto serialization if you can to save yourself some effort. Finatra has built-in support
-for JSON serialization using Jackson but we don't use those facilities and we recommend that you just stick with Circe.
-* **Purity** - If you want to implement your internal code/services using something like Cats Effect that's
-fine/interesting/nifty but you'll need to fit that into our Future world which seems like a lot
-of extra effort for this project. But, it would be interesting if your head is in that space.
+for JSON serialization using Jackson but we don't use those facilities and we recommend that you just stick with Circe. It's one extra step to "manually" de-serialize and serialize given the provided
+controller base class but that keeps the serialization all done with one library/approach.
+You can see what we're doing in the sample controllers. Feel free to improve upon that pattern
+if you wish.
+* **Purity** - We'd love to see an implementation that bends toward pure. Our current codebase
+isn't implemented like that but we're interested in heading that direction. If that's in your
+toolbox and you feel like showing off, we'd love to see how you integrate that approach into our
+current structure. Build an algebra around our endpoints and show us how it's done.
 
 # Questions/Blocked?
 
